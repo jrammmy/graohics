@@ -1,84 +1,236 @@
-// ClickedPints.js (c) 2012 matsuda
 // Vertex shader program
-var VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'void main() {\n' +
-  '  gl_Position = a_Position;\n' +
-  '  gl_PointSize = 10.0;\n' +
-  '}\n';
+let VSHADER_SOURCE =
+	'attribute vec4 a_Position;\n' +
+	'void main() {\n' +
+	'  gl_Position = a_Position;\n' +
+	'  gl_PointSize = 10.0;\n' +
+	'}\n';
 
 // Fragment shader program
 var FSHADER_SOURCE =
   'void main() {\n' +
-  '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
+  '  gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n' +
   '}\n';
 
+// Program vars
+let canvas,
+	gl,
+	a_position,
+	u_Frag,
+	polylines = [],
+	active_polyline = -1,
+	mouse_point = {
+		x: 0.0,
+		y: 0.0
+	};
+
 function main() {
-  // Retrieve <canvas> element
-  var canvas = document.getElementById('glCanvas');
+	if (!setup()) {
+		console.log('There was an error in the setup. Exiting now.');
+		return;
+	}
 
-  // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
-  if (!gl) {
-    console.log('Failed to get the rendering context for WebGL');
-    return;
+	// Mouse press event
+	canvas.onmousedown = function(event) {
+		event.preventDefault();
+		click(event);
+	};
+
+	// Mouse move event
+	canvas.onmousemove = function(event) {
+		event.preventDefault();
+		move(event);
+	};
+
+	// Disable context menu
+	canvas.oncontextmenu = function(event) {
+		return false;
+	}
+}
+
+function setup() {
+	// Retrieve <canvas> element
+	canvas = document.getElementById('glCanvas');
+
+	// Get the rendering context for WebGL
+	gl = getWebGLContext(canvas);
+	if (!gl) {
+		console.log('Failed to get the rendering context for WebGL');
+		return false;
+	}
+
+	// Initialize shaders
+	if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
+		console.log('Failed to intialize shaders.');
+		return false;
+	}
+
+  // Create a buffer object
+  let vertexBuffer = gl.createBuffer();
+  if (!vertexBuffer) {
+    console.log('Failed to create the buffer object');
+    return -1;
   }
 
-  // Initialize shaders
-  if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
-    console.log('Failed to intialize shaders.');
-    return;
-  }
-
-  // // Get the storage location of a_Position
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+  a_Position = gl.getAttribLocation(gl.program, 'a_Position');
   if (a_Position < 0) {
     console.log('Failed to get the storage location of a_Position');
-    return;
+    return -1;
   }
 
-  // Register function (event handler) to be called on a mouse press
-  canvas.onmousedown = function(ev){ click(ev, gl, canvas, a_Position); };
+  // Bind the buffer object to target
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 
-  // Specify the color for clearing <canvas>
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  // Assign buffer to a_Position variable
+  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
 
-  // Clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT);
+  // Enable the assignment to a_Position variable
+  gl.enableVertexAttribArray(a_Position);
+
+	// Specify the color for clearing <canvas>
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+	// Clear <canvas>
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	return true;
 }
 
-var g_points = []; // The array for the position of a mouse press
-function click(ev, gl, canvas, a_Position) {
-  var x = ev.clientX; // x coordinate of a mouse pointer
-  var y = ev.clientY; // y coordinate of a mouse pointer
-  var rect = ev.target.getBoundingClientRect() ;
-
-  console.log('butt');
-
-  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
-  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-  // Store the coordinates to g_points array
-  g_points.push(x); g_points.push(y);
-
-  // Clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-  var len = g_points.length;
-  for(var i = 0; i < len; i += 2) {
-    // Pass the position of a point to a_Position variable
-    gl.vertexAttrib3f(a_Position, g_points[i], g_points[i+1], 0.0);
-
-    // Draw
-    gl.drawArrays(gl.POINTS, 0, 1);
-  }
+function click(event) {
+	let coords;
+	switch (event.button) {
+		case 0:
+			// Left click
+			coords = newPoint(event, {}, false);
+			leftClick(coords);
+			break;
+		case 2:
+			// Right click
+			coords = newPoint(event, {}, true);
+			rightClick(coords);
+			break;
+		default:
+			break;
+	}
 }
 
-var canvas = document.querySelector('#glCanvas');
+function leftClick(coords) {
+	console.log("Left click detected at [", coords.x, ", ", coords.y, "].");
+	draw();
+}
 
-canvas.addEventListener('click', function(){
-  console.log('left mouse click on canvas');
-});
+function rightClick(coords) {
+	console.log("Right click detected at [", coords.x, ", ", coords.y, "].");
+	draw();
+}
 
-canvas.addEventListener('contextmenu', function(){
-  console.log('right mouse click on canvas');
-});
+function move(event) {
+	// Mouse coordinates
+	let x_mouse = event.clientX;
+	let y_mouse = event.clientY;
+
+	// Canvas positioning
+	let rect = event.target.getBoundingClientRect();
+
+	// Draw coordinates
+	mouse_point.x = ((x_mouse - rect.left) - canvas.width / 2) / (canvas.width  / 2);
+	mouse_point.y = (canvas.height / 2 - (y_mouse - rect.top)) / (canvas.height / 2);
+
+	// Draw
+	draw();
+}
+
+function newPoint(event, color, ends) {
+	// Mouse coordinates
+	let x_mouse = event.clientX;
+	let y_mouse = event.clientY;
+
+	// Canvas positioning
+	let rect = event.target.getBoundingClientRect();
+
+	// Draw coordinates
+	let x_draw = ((x_mouse - rect.left) - canvas.width / 2) / (canvas.width  / 2);
+	let y_draw = (canvas.height / 2 - (y_mouse - rect.top)) / (canvas.height / 2);
+
+	// If no active polyline
+	if (active_polyline === -1) {
+		// Add new polyline and set active
+		polylines.push({
+			ended: false,
+			points: []
+		});
+		active_polyline = polylines.length - 1;
+	}
+
+	// Add point to polyline
+	polylines[active_polyline].points.push({
+		x: x_draw,
+		y: y_draw,
+		c: color
+	});
+
+	// If last point of polyline
+	if (ends) {
+		// Finish polyline and set no active one
+		polylines[active_polyline].ended = true;
+		active_polyline = -1;
+	}
+
+	return {
+		x: x_draw,
+		y: y_draw
+	};
+}
+
+function drawPolyline(lineObj) {
+	// Retrieve vertex set, color set and count
+	let vertex_set = [];
+	let color_set = [];
+	let vertex_count;
+
+	for (vertex_count = 0; vertex_count < lineObj.points.length; vertex_count++) {
+		vertex_set.push(lineObj.points[vertex_count].x);
+		vertex_set.push(lineObj.points[vertex_count].y);
+
+		color_set.push(lineObj.points[vertex_count].c);
+	}
+
+	if (vertex_count > 0) {
+		// Write vertex into buffer
+	  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex_set), gl.STATIC_DRAW);
+
+		// Draw points
+		gl.drawArrays(gl.POINTS, 0, vertex_count);
+
+		// If line is not finished
+		if (!lineObj.ended) {
+			// Add mouse location
+			vertex_set.push(mouse_point.x);
+			vertex_set.push(mouse_point.y);
+			vertex_count++;
+
+			// Write vertex into buffer
+	  	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex_set), gl.STATIC_DRAW);
+		} else {
+
+		}
+
+		// Draw lines
+		gl.drawArrays(gl.LINE_STRIP, 0, vertex_count);
+	}
+
+	return vertex_count
+}
+
+function draw() {
+	for (let i = 0; i < polylines.length; i++) {
+		drawPolyline(polylines[i]);
+	}
+
+	return polylines.length;
+}
+
+function clearCanvas() {
+	// Clear <canvas>
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+}
