@@ -72,12 +72,13 @@ function main() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 }
 
-var pts = []; //Store Points
-var line = []; //Store Line Points - Dynamic
-var n = 0; //Size of line/2
-var i = 0; //Index Var
-var end = false; //Right click pressed var
-function click(ev, gl, canvas, a_Position, pressed) {
+var g_points = []; //Store Points
+var g_lines = []; //Store g_lines Points
+var n = 0;
+var i = 0;
+var end = false;
+
+function click(ev, gl, canvas, a_Position) {
   var x = ev.clientX;
   var y = ev.clientY;
   var rect = ev.target.getBoundingClientRect();
@@ -87,67 +88,72 @@ function click(ev, gl, canvas, a_Position, pressed) {
   y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2);
 
   //Left Click Events
-  if (ev.button == 0 && end == false) {
-    pts.push(x);
-    pts.push(y); //store to pts array
-    line.push(x);
-    line.push(y); //store to pts array
+  if (ev.button === 0 && end === false) {
+    console.log('Left click detected');
+    g_points.push([x, y]);
+    g_lines.push(x);
+    g_lines.push(y);
     console.log('(' + x + ', ' + y + ')');
+    console.log(g_lines);
 
     //Recolor Canvas Bg
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    //Draw Lines
+    //Draw g_liness
     canvas.addEventListener('mousemove', function(ev) {
       draw(ev, gl, canvas);
     });
   }
-
-  //Right Click Events - print coordinates and stop drawing on canvas
-  if (ev.button == 2) {
-    pts.push(x);
-    pts.push(y); //store to pts array
-    line.push(x);
-    line.push(y); //store to pts array
+  //Right Click Events
+  else if (ev.button === 2) {
+    console.log('Right click detected');
+    canvas.addEventListener('contextmenu', function(ev) {
+      ev.preventDefault();
+    });
+    g_points.push([x, y]);
+    g_lines.push(x);
+    g_lines.push(y);
     console.log('(' + x + ', ' + y + ')');
     console.log('Your Final Coordinates: ');
-    for (var i = 0; i < pts.length; i += 2) console.log('(' + pts[i] + ', ' + pts[i + 1] + ')');
-    end = true;
-  }
-
-  //Disable right click menu - Piazza/TA Section
-  canvas.addEventListener('contextmenu', function(ev) {
-    if (ev.button == 2) {
-      ev.preventDefault();
-      return false;
+    for (var i = 0; i < g_points.length; i++) {
+      var xy = g_points[i];
+      console.log((i + 1) + ' ' + '(' + xy + ')');
+      end = true;
     }
-  }, false);
+    console.log(g_lines);
+  }
 }
 
-//Follow mouse movement
+//Follow mouse movement ands draws them to canvas
 function draw(ev, gl, canvas, a_Position) {
   var x = ev.clientX;
-  var y = ev.clientY;
+  var y = ev.clientY
   var rect = ev.target.getBoundingClientRect();
 
   //Remove last 2 array inputs
-  if (line.length > 2) line.splice(line.length - 2, line.length - 1);
+  if (g_lines.length > 2) {
+    g_lines.splice(g_lines.length - 2, g_lines.length - 1);
+  }
 
   // Convert to canvas coordinate
   x = ((x - rect.left) - canvas.width / 2) / (canvas.width / 2);
   y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2);
-  line.push(x);
-  line.push(y); //store to pts array
+
+  g_lines.push(x);
+  g_lines.push(y);
+
+  console.log(g_lines);
 
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   //Draw points on Canvas
-  for (var i = 0; i < pts.length; i += 2) {
-    gl.vertexAttrib3f(a_Position, pts[i], pts[i + 1], 0.0);
-    gl.drawArrays(gl.POINTS, 0, pts.length / 2);
+  for (var i = 0; i < g_points.length; i++) {
+    var xy = g_points[i];
+    gl.vertexAttrib3f(a_Position, xy[0], xy[1], 0.0);
+    gl.drawArrays(gl.POINTS, 0, g_points.length);
   };
 
-  //Draw line from point to point
+  //Draw g_lines from point to point
   n = initVertexBuffers(ev, gl, canvas, a_Position, n);
   if (n < 0) {
     console.log('Failed to set the positions of the vertices');
@@ -157,9 +163,11 @@ function draw(ev, gl, canvas, a_Position) {
 }
 
 function initVertexBuffers(ev, gl, canvas, a_Position, n) {
-  n = line.length / 2; //Number of (x,y) pairs
+  n = g_lines.length / 2; //Number of (x,y) pairs
 
-  if (end == true) n = pts.length / 2; //(x,y) point pairs
+  if (end == true) {
+    n = g_points.length; //(x,y) point pairs
+  }
 
   //Create buffer object
   var vertexBuffer = gl.createBuffer();
@@ -170,7 +178,7 @@ function initVertexBuffers(ev, gl, canvas, a_Position, n) {
 
   //Bind buffer to target and write data into buffer object
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(line), gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(g_lines), gl.STATIC_DRAW);
 
   //Initialize a_Position for shader
   var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
