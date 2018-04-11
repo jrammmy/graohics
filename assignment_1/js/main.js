@@ -9,11 +9,8 @@ var VSHADER_SOURCE =
 
 // Fragment shader program
 var FSHADER_SOURCE =
-  'precision mediump float;\n' +
-  'uniform vec4 u_FragColor;\n' +
   'void main() {\n' +
-  '  gl_FragColor = u_FragColor;\n' +
-  // '  gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n' +
+  '  gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n' +
   '}\n';
 
 // Program vars
@@ -21,8 +18,8 @@ var canvas,
   gl,
   a_position,
   u_Frag,
-  polylines = [],
-  active_polyline = -1,
+  lines = [],
+  active_line = -1,
   mouse_point = {
     x: 0.0,
     y: 0.0
@@ -94,15 +91,7 @@ function setup() {
     return -1;
   }
 
-  //Get the storage location of u_FragColor
-  var u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
-
-  // Event listener to change the color
-  canvas.onmousedown = function(ev) {
-    click(ev, gl, canvas, a_Position, u_Frag)
-  };
-
-  // Grab the variables for shirftLines()
+  // Grab the variables for shiftLines()
   shiftLines(gl, a_Position, lineChanger);
 
   gl.vertexAttrib1f(a_PointSize, sizeChanger.value);
@@ -137,23 +126,11 @@ function click(e) {
   } else if (e.button === 2) {
     console.log('Right click detected');
     coords = newPoint(e, {}, true);
-    for (var i = 0; i < polylines[0].points.length; ++i) {
-      var x = polylines[0].points[i].x;
-      var y = polylines[0].points[i].y;
+    for (var i = 0; i < lines[0].points.length; ++i) {
+      var x = lines[0].points[i].x;
+      var y = lines[0].points[i].y;
       console.log('Point:' + (i + 1) + ' (' + x + ', ' + y + ')');
     }
-  }
-
-  // Change colors
-  // Store the color to g_colors array
-  if (x >= 0.0 && y >= 0.0) {
-    // First quadrant
-    g_colors.push([1.0, 0.0, 0.0, 1.0]); // Red
-  } else if (x < 0.0 && y < 0.0) {
-    // Third quadrant
-    g_colors.push([0.0, 1.0, 0.0, 1.0]); // Green
-  } else { // Others
-    g_colors.push([1.0, 1.0, 1.0, 1.0]); // White
   }
 }
 
@@ -198,28 +175,28 @@ function newPoint(event, color, ends) {
   var x_draw = ((x_mouse - rect.left) - canvas.width / 2) / (canvas.width / 2);
   var y_draw = (canvas.height / 2 - (y_mouse - rect.top)) / (canvas.height / 2);
 
-  // If no active polyline
-  if (active_polyline === -1) {
-    // Add new polyline and set active
-    polylines.push({
+  // If no active line
+  if (active_line === -1) {
+    // Add new line and set active
+    lines.push({
       ended: false,
       points: []
     });
-    active_polyline = polylines.length - 1;
+    active_line = lines.length - 1;
   }
 
-  // Add point to polyline
-  polylines[active_polyline].points.push({
+  // Add point to line
+  lines[active_line].points.push({
     x: x_draw,
     y: y_draw,
     c: color
   });
 
-  // If last point of polyline
+  // If last point of line
   if (ends) {
-    // Finish polyline and set no active one
-    polylines[active_polyline].ended = true;
-    active_polyline = -1;
+    // Finish line and set no active one
+    lines[active_line].ended = true;
+    active_line = -1;
   }
 
   return {
@@ -228,7 +205,7 @@ function newPoint(event, color, ends) {
   };
 };
 
-function drawPolyline(lineObj) {
+function drawline(lineObj) {
   // Retrieve vertex set, color set and count
   var v_set = [];
   var color_set = [];
@@ -267,14 +244,14 @@ function drawPolyline(lineObj) {
 }
 
 function draw() {
-  for (var i = 0; i < polylines.length; i++) {
-    drawPolyline(polylines[i]);
+  for (var i = 0; i < lines.length; i++) {
+    drawline(lines[i]);
   }
 
-  return polylines.length;
+  return lines.length;
 }
 
 function clearCanvas() {
   // Clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.clear(gl.COLOR_BUFFER_BIT);
 }
