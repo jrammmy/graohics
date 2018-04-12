@@ -1,11 +1,10 @@
 //Shading Library Resource
 var VSHADER_SOURCE =
   'attribute vec4 a_Position;\n' +
-  // 'attribute float a_PointSize;\n' +
+  'attribute float a_PointSize;\n' +
   'void main() {\n' +
   ' gl_Position = a_Position;\n' + // Cordinates that a user can specify
-  // ' gl_PointSize = a_PointSize;\n' + // Set the point size
-  ' gl_PointSize = 10.0;\n' + // Set the point size
+  ' gl_PointSize = a_PointSize;\n' + // Set the point size
   '}\n';
 
 // Fragment shader program
@@ -19,6 +18,7 @@ var FSHADER_SOURCE =
 function main() {
   //Retrive canvas from HTML file
   var canvas = document.getElementById('webgl');
+  var sizeChanger = document.querySelector('#sizeChanger');
 
   var gl = getWebGLContext(canvas);
   if (!gl) {
@@ -36,7 +36,7 @@ function main() {
 
   // Get the storage location of attribute/uniform variables
   var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  // var a_PointSize = gl.getAttribLocation(gl.program, 'a_PointSize');
+  var a_PointSize = gl.getAttribLocation(gl.program, 'a_PointSize');
   var u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
 
   // Error Checking
@@ -45,10 +45,10 @@ function main() {
     return;
   }
 
-  // if (a_PointSize < 0) {
-  //   console.log('Failed to get the storage location of a_PointSize');
-  //   return;
-  // }
+  if (a_PointSize < 0) {
+    console.log('Failed to get the storage location of a_PointSize');
+    return;
+  }
 
   if (!u_FragColor) {
     console.log('Failed to get the storage location of u_FragColor');
@@ -56,13 +56,15 @@ function main() {
   }
 
   // Pass point size to attribute variable
-  // gl.vertexAttrib1f(a_PointSize, 10.0);
+  gl.vertexAttrib1f(a_PointSize, sizeChanger.value);
 
   // Call point store function when mouse clicked
   canvas.onmousedown = function(ev) {
     click(ev, gl, canvas, a_Position, u_FragColor);
     draw(ev, gl, canvas, a_Position, u_FragColor);
   };
+
+  pointSize(gl, a_PointSize, sizeChanger);
 
   //Clear canvas color
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -107,7 +109,7 @@ function click(ev, gl, canvas, a_Position, u_FragColor) {
     g_lines.push(y);
     console.log('(' + x + ', ' + y + ')');
 
-    //Draw g_liness
+    //Draw rubberband lines
     canvas.addEventListener('mousemove', function(ev) {
       draw(ev, gl, canvas, a_Position);
     });
@@ -129,11 +131,10 @@ function click(ev, gl, canvas, a_Position, u_FragColor) {
       console.log((i + 1) + ' ' + '(' + xy + ')');
       end = true;
     }
-
   }
 }
 
-//Follow mouse movement ands draws them to canvas
+//Follow mouse movement and draws them to canvas
 function draw(ev, gl, canvas, a_Position, u_FragColor) {
   var x = ev.clientX;
   var y = ev.clientY
@@ -162,7 +163,6 @@ function draw(ev, gl, canvas, a_Position, u_FragColor) {
     gl.vertexAttrib3f(a_Position, xy[0], xy[1], 0.0);
     // Pass the color of a point to u_FragColor variable
     gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
-    // console.log('rgba ' + rgba)
     // Draw
     gl.drawArrays(gl.POINTS, 0, g_points.length);
   };
@@ -179,7 +179,7 @@ function draw(ev, gl, canvas, a_Position, u_FragColor) {
 function initVertexBuffers(ev, gl, canvas, a_Position, n) {
   n = g_lines.length / 2; //Number of (x,y) pairs
 
-  if (end == true) {
+  if (end === true) {
     n = g_points.length; //(x,y) point pairs
   }
 
@@ -204,4 +204,10 @@ function initVertexBuffers(ev, gl, canvas, a_Position, n) {
   gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(a_Position);
   return n;
+}
+
+function pointSize(gl, a_PointSize, sizeChanger) {
+  sizeChanger.addEventListener('click', function() {
+    gl.vertexAttrib1f(a_PointSize, sizeChanger.value);
+  });
 }
