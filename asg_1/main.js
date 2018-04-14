@@ -16,9 +16,10 @@ var FSHADER_SOURCE =
   '}\n';
 
 function main() {
-  //Retrive canvas from HTML file
+  //Retrive HTML elements
   var canvas = document.getElementById('webgl');
   var sizeChanger = document.querySelector('#sizeChanger');
+  var lineShifter = document.querySelector('#lineShifter');
 
   var gl = getWebGLContext(canvas);
   if (!gl) {
@@ -33,7 +34,6 @@ function main() {
   }
 
   //====================== Attribute Manipulation =============================
-
   // Get the storage location of attribute/uniform variables
   var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
   var a_PointSize = gl.getAttribLocation(gl.program, 'a_PointSize');
@@ -65,15 +65,16 @@ function main() {
   };
 
   pointSize(gl, a_PointSize, sizeChanger);
+  shiftLine(gl, a_Position, lineShifter);
 
   //Clear canvas color
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
   //Clear canvas
   gl.clear(gl.COLOR_BUFFER_BIT);
-
 } //end main()
 
+//============== Event Functions ==============================================
 var g_points = []; //Store Points
 var g_lines = []; //Store g_lines Points
 var g_colors = []; // The array to store the color of a point
@@ -115,7 +116,7 @@ function click(ev, gl, canvas, a_Position, u_FragColor) {
     });
   }
   //Right Click Events
-  else if (ev.button === 2) {
+  else if (ev.button === 2 && end === false) {
     console.log('Right click detected');
     //Disable the context menu
     canvas.addEventListener('contextmenu', function(ev) {
@@ -129,8 +130,8 @@ function click(ev, gl, canvas, a_Position, u_FragColor) {
     for (var i = 0; i < g_points.length; i++) {
       var xy = g_points[i];
       console.log((i + 1) + ' ' + '(' + xy + ')');
-      end = true;
     }
+    end = true;
   }
 }
 
@@ -176,6 +177,7 @@ function draw(ev, gl, canvas, a_Position, u_FragColor) {
   gl.drawArrays(gl.LINE_STRIP, 0, n);
 }
 
+//================== Initialize Buffers =======================================
 function initVertexBuffers(ev, gl, canvas, a_Position, n) {
   n = g_lines.length / 2; //Number of (x,y) pairs
 
@@ -206,8 +208,24 @@ function initVertexBuffers(ev, gl, canvas, a_Position, n) {
   return n;
 }
 
+//================= Extra Credit Functions ====================================
 function pointSize(gl, a_PointSize, sizeChanger) {
   sizeChanger.addEventListener('click', function() {
     gl.vertexAttrib1f(a_PointSize, sizeChanger.value);
+  });
+}
+
+// Does not work yet
+function shiftLine(gl, a_Position, lineShifter) {
+  var shiftedArray = [];
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  lineShifter.addEventListener('click', function() {
+    for (var i = 0; i < g_points.length; i++) {
+      shiftedArray[i] = g_points[i][0] + .3;
+      g_points[i][0] = shiftedArray[i];
+      gl.vertexAttrib3f(a_Position, g_points[i][0], g_points[i][1], 0.0);
+      gl.drawArrays(gl.POINTS, 0, g_points.length);
+    }
+    gl.drawArrays(gl.LINE_STRIP, 0, n);
   });
 }

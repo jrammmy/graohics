@@ -8,13 +8,44 @@
   <title>Hello Canvas</title>
 </head>
 
+<style>
+  #content {
+    float: left;
+    padding-right: 50px;
+  }
+</style>
+
 <body onload="main()">
 
-  <canvas id="webgl" height="500px" width="500px">
-    Please use a browser supporting "canvas".
-  </canvas>
+  <div id="content">
+    <canvas id="webgl" height="500px" width="500px" disabled>
+      Please use a browser supporting "canvas".
+    </canvas>
+    <div>
+      <input id="sizeChanger" type="range" min="5.0" max="30.0" step="1.0">
+      <button id="lineShifter" disabled> Shift Lines</button>
+    </div>
+  </div>
 
-  <input id="sizeChanger" type="range" min="5.0" max="30.0" step="1.0">
+  <div id="extras">
+    <h3>Extras</h3>
+    <ul>
+      <li>
+        <h4>Change Color</h4>
+        <ul>
+          <li> The user can change the colors of the polylines by clicking in certain quadrents of the canvas. </li>
+        </ul>
+      </li>
+      <li>
+        <h4>Size of Points</h4>
+        <ul>
+          <li> The user can change the size of the points by adjusting the slider. </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+
 
   <script src="./lib/webgl-utils.js"></script>
   <script src="./lib/webgl-debug.js"></script>
