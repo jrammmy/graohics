@@ -168,7 +168,6 @@ function draw(ev, gl, canvas, a_Position, u_FragColor) {
     gl.drawArrays(gl.POINTS, 0, g_points.length);
   };
 
-  //Draw g_lines from point to point
   n = initVertexBuffers(ev, gl, canvas, a_Position, n);
   if (n < 0) {
     console.log('Failed to set the positions of the vertices');
