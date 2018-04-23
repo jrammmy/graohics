@@ -1,0 +1,13 @@
+body {
+  padding: 0;
+  margin: 0;
+}
+
+#content {
+  width: 500px;
+  margin: auto;
+}
+
+#webgl {
+  border: 1px solid pink;
+}

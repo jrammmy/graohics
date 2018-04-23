@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Assignment 2</title>
+  <link rel="stylesheet" href="./css/main.css">
+</head>
+
+<body onload="main()">
+  <div id="content">
+    <canvas id="webgl" height="500" width="500">
+                    Please use a browser that supports "canvas".
+                </canvas>
+
+    <div>
+      <button id="save_canvas">Save file</button>
+      <button id="update_screen">Extract data</button>
+      <input type="file" id="fileinput" />
+    </div>
+    <button onclick="clearScreen()">Clear</button>
+    <div>
+      <labe>Change radius size</labe>
+      <input id="radSize" type="range" min="0.05" max="0.3" step=".05">
+    </div>
+    <div>
+      <labe>Change number of sides</labe>
+      <input id="changeSides" type="range" min="6.0" max="100.0" step="1.0">
+    </div>
+  </div>
+
+  fuck
+
+  <script src="./lib/webgl-utils.js"></script>
+  <script src="./lib/webgl-debug.js"></script>
+  <script src="./lib/cuon-utils.js"></script>
+  <script src="./lib/cuon-matrix.js"></script>
+  <script src="./lib/ioSOR.js"></script>
+  <script src="main.js"></script>
+</body>
+
+</html>
