@@ -1,0 +1,36 @@
+How many globals can we get away with? What is the limit?
+
+on toggling normals, when we hit the button, does it auto draw w/o normals or w/ normals? How I do that if it's immediate?
+
+Inverted z-axis?
+
+Did I implement the ortho-projection correctly?
+
+Way to better my lab grade? Based on inverted z?
+
+Better/preferred way to store verts, indc's, norms, and cols?
+
+Do my cylinders look good as is. YES
+
+occasionally parts of my cylinder don't draw out, and it's not based off a pattern, it's random. Is there a reason for this?
+
+Why is my rubberbanding line colorfulm after one iteration?
+
+
+
+
+
+
+
+GOALS:
+Better way to store vertices, indices, normals, and colors
+
+Make code more uniform/consistent
+
+Expand out repeated code to helper functions
+
+
+Steps to take Prog 2:
+smooth
+ambient
+specular

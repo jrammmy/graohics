@@ -17,7 +17,7 @@ var FSHADER_SOURCE =
   '  gl_FragColor = v_Color;\n' +
   '}\n';
 
-// Program vars
+// Global vars
 var FSIZE = (new Float32Array()).BYTES_PER_ELEMENT;
 var radSize = document.querySelector('#radSize');
 var changeSides = document.querySelector('#changeSides');
@@ -129,11 +129,9 @@ function main() {
 function click(ev, gl) {
   var coords = {};
 
-  // Mouse coordinates
   var x_mouse = ev.clientX;
   var y_mouse = ev.clientY;
 
-  // Canvas positioning
   var rect = ev.target.getBoundingClientRect();
 
   // Draw coordinates
@@ -195,7 +193,7 @@ function draw() {
     if (polyLines[i].ended) {
       drawRectangle(polyLines[i]);
     } else {
-      drawLine(polyLines[i]);
+      drawPolyline(polyLines[i]);
     }
   }
 
@@ -204,7 +202,7 @@ function draw() {
 }
 
 // Draws a line
-function drawLine(obj) {
+function drawPolyline(obj) {
   // Draw object elems (points)
   for (var i = 0; i < obj.elems.length; i++) {
     g_lines.push(obj.elems[i].point.x);
@@ -309,7 +307,6 @@ function drawRectangle(obj) {
         vert.push(1.0);
         vert.push(0.0);
         vert.push(1.0);
-
       }
 
       // Write vertex into buffer
@@ -321,43 +318,41 @@ function drawRectangle(obj) {
     }
   }
 
-  // Draw object elems (circs points)
   for (var i = 0; i < obj.elems.length; i++) {
-    var vert_vertices = [];
-    // Draw vert circ
+    vert = [];
     for (var j = 0; j < obj.elems[i].circ.length; j++) {
-      vert_vertices.push(obj.elems[i].circ[j].x);
-      vert_vertices.push(obj.elems[i].circ[j].y);
-      vert_vertices.push(obj.elems[i].circ[j].z);
-      if (j == 0) {
-        vert_vertices.push(1.0);
-        vert_vertices.push(0.0);
-        vert_vertices.push(1.0);
-      } else if (j == 9) {
-        vert_vertices.push(1.0);
-        vert_vertices.push(0.0);
-        vert_vertices.push(0.0);
+      vert.push(obj.elems[i].circ[j].x);
+      vert.push(obj.elems[i].circ[j].y);
+      vert.push(obj.elems[i].circ[j].z);
+      if (j === 0) {
+        vert.push(1.0);
+        vert.push(0.0);
+        vert.push(1.0);
+      } else if (j === 9) {
+        vert.push(1.0);
+        vert.push(0.0);
+        vert.push(0.0);
       } else {
-        vert_vertices.push(obj.elems[i].circ[j].r);
-        vert_vertices.push(obj.elems[i].circ[j].g);
-        vert_vertices.push(obj.elems[i].circ[j].b);
+        vert.push(obj.elems[i].circ[j].r);
+        vert.push(obj.elems[i].circ[j].g);
+        vert.push(obj.elems[i].circ[j].b);
       }
     }
 
     // Write vertices into buffer
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vert_vertices), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vert), gl.STATIC_DRAW);
 
+    var len = vert.length / 6;
     // Draw points
-    gl.drawArrays(gl.POINTS, 0, vert_vertices.length / 6);
+    gl.drawArrays(gl.POINTS, 0, len);
 
     // Draw lines
-    gl.drawArrays(gl.LINE_LOOP, 0, vert_vertices.length / 6);
+    gl.drawArrays(gl.LINE_LOOP, 0, len);
   }
 }
 
 // Draw Cylinder
 function drawCylinder(obj) {
-  // Each cylinder (starting from the second one)
   for (var i = 1; i < obj.elems.length; i++) {
     if (i === 1) {
       obj.elems[i - 1].circ = drawCircles(obj.elems[i - 1], obj.elems[i]).circ1;
@@ -455,12 +450,12 @@ function drawCircles(p1, p2) {
     var d = Math.PI / 180;
     var angle = i * d;
     // Calculate vector direction
-    var direction = [radius * (Math.cos(angle) * u1[0] + Math.sin(angle) * u2[0]),
+    var dir = [radius * (Math.cos(angle) * u1[0] + Math.sin(angle) * u2[0]),
       radius * (Math.cos(angle) * u1[1] + Math.sin(angle) * u2[1]),
       radius * (Math.cos(angle) * u1[2] + Math.sin(angle) * u2[2])
     ]
-    circ1.push(new coord(p1.x + direction[0], p1.y + direction[1], p1.z + direction[2], 0.0, 0.0, 1.0));
-    circ2.push(new coord(p2.x + direction[0], p2.y + direction[1], p2.z + direction[2], 0.0, 0.0, 1.0));
+    circ1.push(new coord(p1.x + dir[0], p1.y + dir[1], p1.z + dir[2], 0.0, 0.0, 1.0));
+    circ2.push(new coord(p2.x + dir[0], p2.y + dir[1], p2.z + dir[2], 0.0, 0.0, 1.0));
   }
 
   return {
@@ -510,7 +505,7 @@ function magnitude(vec) {
 // Clear canvas
 function clearScreen() {
   console.log('clearing...');
-  location.reload();
+  location.reload(); // Reload window
 }
 
 //=============== Objects =====================================================

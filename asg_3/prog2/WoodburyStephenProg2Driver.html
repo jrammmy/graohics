@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Draw a Series of Lines with Mouse Clicks</title>
+  </head>
+
+  <body onload="main()">
+    <canvas id="webgl" width="500" height="500" style="border: 1px solid red;">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+    <input type="file" id="fileName">
+
+    <button onclick="saveSOR()" type="button">Save SOR</button>
+    <button onclick="readSOR()" type="button">Extract SOR</button>
+    <button onclick="normalsSwitch()" type="button">Normals ON/OFF</button>
+    <button onclick="decideSmoothFlat()" type="button">Smooth/Flat Shading</button>
+    <button onclick="ambientSwitch()" type="button">Ambient Lighting ON/OFF</button>
+    <button onclick="specularSwitch()" type="button">Specular Lighting ON/OFF</button>
+    <input type="range" id="myRange" min="1" max="20" step="1">
+    <button onclick="setnS()">Set Gloss Index</button>
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="../lib/cuon-matrix.js"></script>
+    <script src="ioSOR.js"></script>
+    <script src="WoodburyStephenProg2Driver.js"></script>
+  </body>
+</html>
